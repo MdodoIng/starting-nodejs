@@ -1,0 +1,29 @@
+.container {
+  max-width: 420px;
+  margin: 5rem auto;
+  background: white;
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.container h2 {
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+}
+
+.submitBtn {
+  width: 100%;
+  margin-top: 1rem;
+  padding: 0.75rem;
+  font-size: 1rem;
+}
+
+.footer {
+  margin-top: 1rem;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.footer a { color: #1a1a2e; font-weight: bold; text-decoration: none; }

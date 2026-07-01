@@ -1,0 +1,40 @@
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  background: #1a1a2e;
+  color: white;
+}
+
+.brand {
+  font-size: 1.3rem;
+  font-weight: bold;
+  text-decoration: none;
+  color: white;
+}
+
+.links {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.links a {
+  color: #ccc;
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+
+.links a:hover { color: white; }
+
+.email {
+  color: #aaa;
+  font-size: 0.85rem;
+}
+
+.logoutBtn {
+  background: #e94560;
+  padding: 0.35rem 1rem;
+  font-size: 0.85rem;
+}

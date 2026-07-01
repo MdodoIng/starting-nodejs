@@ -1,0 +1,31 @@
+.page { max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+.page h2 { margin-bottom: 1.5rem; }
+
+.order {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  margin-bottom: 1rem;
+}
+
+.orderHeader {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.8rem;
+}
+
+.status {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  background: #ffeaa7;
+  color: #856404;
+}
+
+.products { margin: 0.5rem 0; }
+.products li { color: #555; font-size: 0.9rem; padding: 0.2rem 0; }
+.total { font-weight: bold; margin-top: 0.5rem; }
+.date { color: #999; font-size: 0.8rem; }
+.empty { color: #999; text-align: center; padding: 3rem; }
