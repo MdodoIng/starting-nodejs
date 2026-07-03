@@ -1,0 +1,165 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LAN Share</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 480px;
+        margin: 0 auto;
+        padding: 16px;
+      }
+      h1 {
+        font-size: 1.4rem;
+      }
+      h2 {
+        font-size: 1.1rem;
+        margin-top: 24px;
+      }
+      img {
+        display: block;
+        max-width: 100%;
+        height: auto;
+        margin: 0 auto;
+      }
+      input[type="file"] {
+        width: 100%;
+        margin-bottom: 8px;
+      }
+      button {
+        width: 100%;
+        padding: 12px;
+        font-size: 1rem;
+        border: none;
+        border-radius: 6px;
+        background: #2563eb;
+        color: white;
+        cursor: pointer;
+      }
+      button:disabled {
+        opacity: 0.6;
+      }
+      #progressWrap {
+        display: none;
+        margin-top: 10px;
+        background: #e5e7eb;
+        border-radius: 6px;
+        overflow: hidden;
+        height: 20px;
+      }
+      #progressBar {
+        height: 100%;
+        width: 0%;
+        background: #2563eb;
+        color: white;
+        font-size: 0.75rem;
+        text-align: center;
+        line-height: 20px;
+        transition: width 0.15s ease;
+        white-space: nowrap;
+      }
+      ul {
+        list-style: none;
+        padding: 0;
+      }
+      li {
+        padding: 10px 0;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.9rem;
+      }
+      li a {
+        flex-shrink: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>LAN Share</h1>
+
+    <h2>Scan to open on another device</h2>
+    <img
+      src="/api/qr"
+      alt="QR code linking to this LAN share page"
+      width="240"
+      height="240"
+    />
+
+    <h2>Files</h2>
+    <input type="file" id="fileInput" />
+    <button id="uploadBtn" onclick="uploadFile()">Upload</button>
+
+    <div id="progressWrap">
+      <div id="progressBar">0%</div>
+    </div>
+
+    <ul id="fileList"></ul>
+
+    <script>
+      async function loadFiles() {
+        const res = await fetch("/api/files");
+        const files = await res.json();
+        const list = document.getElementById("fileList");
+        list.innerHTML = files
+          .map(
+            (f) =>
+              `<li><span>${f.name} (${f.size} bytes)</span>
+          <a href="/api/download/${f.name}">download</a></li>`,
+          )
+          .join("");
+      }
+
+      function uploadFile() {
+        const input = document.getElementById("fileInput");
+        const file = input.files[0];
+        if (!file) return;
+
+        const btn = document.getElementById("uploadBtn");
+        const wrap = document.getElementById("progressWrap");
+        const bar = document.getElementById("progressBar");
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        // fetch() has no upload-progress event, so XMLHttpRequest is used here instead.
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", "/api/upload");
+
+        btn.disabled = true;
+        wrap.style.display = "block";
+        bar.style.width = "0%";
+        bar.textContent = "0%";
+
+        xhr.upload.onprogress = (e) => {
+          if (!e.lengthComputable) return;
+          const pct = Math.round((e.loaded / e.total) * 100);
+          bar.style.width = pct + "%";
+          bar.textContent = pct + "%";
+        };
+
+        xhr.onload = () => {
+          btn.disabled = false;
+          wrap.style.display = "none";
+          input.value = "";
+          loadFiles();
+        };
+
+        xhr.onerror = () => {
+          btn.disabled = false;
+          bar.textContent = "Upload failed";
+        };
+
+        xhr.send(formData);
+      }
+
+      loadFiles();
+    </script>
+  </body>
+</html>
