@@ -5,11 +5,12 @@ import morgan from "morgan";
 import fs from "node:fs";
 import path from "node:path";
 
-
 const app = express();
 app.use(express.json());
 morgan.token("id", (req) => req.headers["x-request-id"] || "none");
-const accessLogStream = fs.createWriteStream(path.join("logs", "access.log"), { flags: "a" });
+const accessLogStream = fs.createWriteStream(path.join("logs", "access.log"), {
+  flags: "a",
+});
 
 app.use(morgan("combined", { stream: accessLogStream }));
 
@@ -17,7 +18,6 @@ app.use((req, res, next) => {
   logger.info(`${req.method} ${req.url}`);
   next();
 });
-
 
 app.listen(
   3000,
@@ -145,4 +145,6 @@ app.post("/notes/:id/tags/bulk", async (req, res) => {
   }
 });
 
-
+app.get("/crash", () => {
+  process.exit(1); // simulates a fatal, unhandled crash
+});
