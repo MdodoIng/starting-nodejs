@@ -17,9 +17,5 @@
   "bugs": {
     "url": "https://github.com/MdodoIng/starting-nodejs/issues"
   },
-  "homepage": "https://github.com/MdodoIng/starting-nodejs#readme",
-  "dependencies": {
-    "express": "^5.2.1",
-    "piscina": "^5.2.0"
-  }
+  "homepage": "https://github.com/MdodoIng/starting-nodejs#readme"
 }
