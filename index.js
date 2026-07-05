@@ -1,25 +1,29 @@
 import express from "express";
 import { pool } from "./db.js";
+import { logger } from "./logger.js";
 
 const app = express();
 app.use(express.json());
 
-app.listen(3000, () => console.log("Server on http://localhost:3000"));
+app.listen(
+  3000,
+  () => console.log("Server on http://localhost:3000"),
+  logger.info("Server starting up"),
+  logger.warn("This is a warning"),
+  logger.error("Something went wrong"),
+);
 
 app.post("/notes", async (req, res) => {
-  const { title, body } = req.body;
-  if (!title || title.length < 3) {
-    return res
-      .status(400)
-      .json({ error: "Title must be at least 3 characters" });
-  }
+  logger.info(`Creating note: ${req.body.title}`);
   try {
     const result = await pool.query(
       "INSERT INTO notes (title, body) VALUES ($1, $2) RETURNING *",
-      [title, body || ""],
+      [req.body.title, req.body.body || ""],
     );
+    logger.info(`Note created with id ${result.rows[0].id}`);
     res.status(201).json(result.rows[0]);
   } catch (err) {
+    logger.error(`Failed to create note: ${err.message}`);
     res.status(400).json({ error: err.message });
   }
 });
@@ -114,7 +118,7 @@ app.post("/notes/:id/tags/bulk", async (req, res) => {
     for (const tagId of req.body.tagIds) {
       await client.query(
         "INSERT INTO note_tags (note_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
-        [req.params.id, tagId]
+        [req.params.id, tagId],
       );
     }
     await client.query("COMMIT");
@@ -125,4 +129,9 @@ app.post("/notes/:id/tags/bulk", async (req, res) => {
   } finally {
     client.release(); // always return the connection to the pool
   }
+});
+
+app.use((req, res, next) => {
+  logger.info(`${req.method} ${req.url}`);
+  next();
 });
