@@ -1,0 +1,37 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
+const express_1 = __importDefault(require("express"));
+const cors_1 = __importDefault(require("cors"));
+const errorHandler_1 = require("./middleware/errorHandler");
+const auth_routes_1 = __importDefault(require("./modules/auth/auth.routes"));
+const users_routes_1 = __importDefault(require("./modules/users/users.routes"));
+const genres_routes_1 = __importDefault(require("./modules/genres/genres.routes"));
+const movies_routes_1 = __importDefault(require("./modules/movies/movies.routes"));
+const screens_routes_1 = __importDefault(require("./modules/screens/screens.routes"));
+const showtimes_routes_1 = __importDefault(require("./modules/showtimes/showtimes.routes"));
+const reservations_routes_1 = __importDefault(require("./modules/reservations/reservations.routes"));
+const reports_routes_1 = __importDefault(require("./modules/reports/reports.routes"));
+const app = (0, express_1.default)();
+app.use((0, cors_1.default)());
+app.use(express_1.default.json());
+app.get("/health", (_req, res) => res.json({ status: "ok" }));
+app.use("/api/auth", auth_routes_1.default);
+app.use("/api/users", users_routes_1.default);
+app.use("/api/genres", genres_routes_1.default);
+app.use("/api/movies", movies_routes_1.default);
+app.use("/api/screens", screens_routes_1.default);
+app.use("/api/showtimes", showtimes_routes_1.default);
+app.use("/api/reservations", reservations_routes_1.default);
+app.use("/api/reports", reports_routes_1.default);
+app.use(errorHandler_1.notFoundHandler);
+app.use(errorHandler_1.errorHandler);
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Movie Reservation System API listening on port ${PORT}`);
+});
+exports.default = app;
