@@ -6,18 +6,45 @@ import Login from './pages/Login'
 import Signup from './pages/Signup'
 import Users from './pages/Users'
 import Protected from './pages/Protected'
+import Leaderboard from './pages/Leaderboard'
+import { AuthProvider } from './context/AuthContext'
+import { ProtectedRoute } from './components/ProtectedRoute'
 import './styles.css'
 
 const Root = () => (
   <BrowserRouter>
-    <Routes>
-      <Route path="/" element={<App />}>
-        <Route index element={<Login />} />
-        <Route path="signup" element={<Signup />} />
-        <Route path="users" element={<Users />} />
-        <Route path="protected" element={<Protected />} />
-      </Route>
-    </Routes>
+    <AuthProvider>
+      <Routes>
+        <Route path="/" element={<App />}>
+          <Route index element={<Login />} />
+          <Route path="signup" element={<Signup />} />
+          <Route
+            path="users"
+            element={
+              <ProtectedRoute>
+                <Users />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="protected"
+            element={
+              <ProtectedRoute>
+                <Protected />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="leaderboard"
+            element={
+              <ProtectedRoute>
+                <Leaderboard />
+              </ProtectedRoute>
+            }
+          />
+        </Route>
+      </Routes>
+    </AuthProvider>
   </BrowserRouter>
 )
 
