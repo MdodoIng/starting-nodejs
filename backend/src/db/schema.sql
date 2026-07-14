@@ -89,6 +89,7 @@ CREATE TABLE IF NOT EXISTS reservations (
   showtime_id INTEGER NOT NULL REFERENCES showtimes(id) ON DELETE CASCADE,
   status TEXT NOT NULL CHECK (status IN ('confirmed', 'cancelled')) DEFAULT 'confirmed',
   total_amount REAL NOT NULL CHECK (total_amount >= 0),
+  payment_method TEXT NOT NULL CHECK (payment_method IN ('card', 'cash', 'paypal')) DEFAULT 'card',
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   cancelled_at TEXT
 );

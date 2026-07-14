@@ -66,6 +66,7 @@ export interface Reservation {
   showtime_id: number;
   status: "confirmed" | "cancelled";
   total_amount: number;
+  payment_method: "card" | "cash" | "paypal";
   created_at: string;
   cancelled_at: string | null;
   start_time: string;

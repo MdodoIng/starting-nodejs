@@ -86,6 +86,16 @@ export function MyReservationsPage() {
                         .map((s) => `${s.row_label}${s.seat_number}`)
                         .join(", ")}
                     </p>
+                    <p
+                      className="text-muted"
+                      style={{ fontSize: 13, margin: "4px 0 0" }}
+                    >
+                      Payment: {r.payment_method === "card"
+                        ? "Card"
+                        : r.payment_method === "paypal"
+                        ? "PayPal"
+                        : "Pay at venue"}
+                    </p>
                   </div>
                   <div className="reservation-card-side">
                     <div

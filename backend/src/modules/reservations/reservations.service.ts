@@ -5,6 +5,7 @@ interface CreateReservationInput {
   userId: number;
   showtimeId: number;
   seatIds: number[];
+  paymentMethod: "card" | "cash" | "paypal";
 }
 
 /**
@@ -75,9 +76,9 @@ export function createReservation(input: CreateReservationInput) {
 
     const reservationInfo = db
       .prepare(
-        `INSERT INTO reservations (user_id, showtime_id, status, total_amount) VALUES (?, ?, 'confirmed', ?)`,
+        `INSERT INTO reservations (user_id, showtime_id, status, total_amount, payment_method) VALUES (?, ?, 'confirmed', ?, ?)`,
       )
-      .run(userId, showtimeId, totalAmount);
+      .run(userId, showtimeId, totalAmount, input.paymentMethod);
     const reservationId = reservationInfo.lastInsertRowid as number;
 
     const insertSeat = db.prepare(

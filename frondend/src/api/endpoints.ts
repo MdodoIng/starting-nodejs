@@ -105,10 +105,11 @@ export const ShowtimesApi = {
 
 // ---- Reservations ----
 export const ReservationsApi = {
-  create: (showtime_id: number, seat_ids: number[]) =>
+  create: (showtime_id: number, seat_ids: number[], payment_method: string) =>
     api.post<{ reservation: Reservation }>("/reservations", {
       showtime_id,
       seat_ids,
+      payment_method,
     }),
   mine: () => api.get<{ reservations: Reservation[] }>("/reservations/me"),
   cancel: (id: number) =>

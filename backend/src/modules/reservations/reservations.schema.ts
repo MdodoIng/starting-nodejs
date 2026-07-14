@@ -5,6 +5,9 @@ export const createReservationSchema = z.object({
   seat_ids: z
     .array(z.number().int().positive())
     .min(1, "Select at least one seat"),
+  payment_method: z
+    .enum(["card", "cash", "paypal"])
+    .default("card"),
 });
 
 export const listReservationsQuerySchema = z.object({

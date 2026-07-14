@@ -7,6 +7,9 @@ exports.createReservationSchema = zod_1.z.object({
     seat_ids: zod_1.z
         .array(zod_1.z.number().int().positive())
         .min(1, "Select at least one seat"),
+    payment_method: zod_1.z
+        .enum(["card", "cash", "paypal"])
+        .default("card"),
 });
 exports.listReservationsQuerySchema = zod_1.z.object({
     showtime_id: zod_1.z.coerce.number().int().positive().optional(),

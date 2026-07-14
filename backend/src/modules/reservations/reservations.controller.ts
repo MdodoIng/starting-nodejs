@@ -4,11 +4,12 @@ import { AppError } from "../../utils/AppError";
 
 export function create(req: Request, res: Response) {
   if (!req.user) throw new AppError(401, "Authentication required");
-  const { showtime_id, seat_ids } = req.body;
+  const { showtime_id, seat_ids, payment_method } = req.body;
   const reservation = reservationsService.createReservation({
     userId: req.user.id,
     showtimeId: showtime_id,
     seatIds: seat_ids,
+    paymentMethod: payment_method,
   });
   res.status(201).json({ reservation });
 }

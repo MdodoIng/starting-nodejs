@@ -50,8 +50,8 @@ function createReservation(input) {
         }
         const totalAmount = showtime.price * uniqueSeatIds.length;
         const reservationInfo = database_1.db
-            .prepare(`INSERT INTO reservations (user_id, showtime_id, status, total_amount) VALUES (?, ?, 'confirmed', ?)`)
-            .run(userId, showtimeId, totalAmount);
+            .prepare(`INSERT INTO reservations (user_id, showtime_id, status, total_amount, payment_method) VALUES (?, ?, 'confirmed', ?, ?)`)
+            .run(userId, showtimeId, totalAmount, input.paymentMethod);
         const reservationId = reservationInfo.lastInsertRowid;
         const insertSeat = database_1.db.prepare(`INSERT INTO reservation_seats (reservation_id, showtime_id, seat_id) VALUES (?, ?, ?)`);
         for (const seatId of uniqueSeatIds) {

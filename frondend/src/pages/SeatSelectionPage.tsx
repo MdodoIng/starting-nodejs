@@ -15,6 +15,9 @@ export function SeatSelectionPage() {
   const [showtime, setShowtime] = useState<Showtime | null>(null);
   const [seats, setSeats] = useState<SeatWithStatus[] | null>(null);
   const [selected, setSelected] = useState<SeatWithStatus[]>([]);
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "cash" | "paypal">(
+    "card",
+  );
   const [error, setError] = useState<string | null>(null);
   const [booking, setBooking] = useState(false);
 
@@ -45,6 +48,7 @@ export function SeatSelectionPage() {
       await ReservationsApi.create(
         showtime.id,
         selected.map((s) => s.id),
+        paymentMethod,
       );
       navigate("/reservations", { state: { justBooked: true } });
     } catch (err) {
@@ -121,6 +125,24 @@ export function SeatSelectionPage() {
             <div className="ticket-stub-label">Total</div>
             <div className="ticket-stub-value gold">${total.toFixed(2)}</div>
           </div>
+        </div>
+        <div className="payment-method" style={{ marginTop: 18 }}>
+          <label htmlFor="payment-method" className="ticket-stub-label">
+            Payment method
+          </label>
+          <select
+            id="payment-method"
+            value={paymentMethod}
+            onChange={(event) =>
+              setPaymentMethod(event.target.value as "card" | "cash" | "paypal")
+            }
+            className="input-select"
+            style={{ width: "100%", marginTop: 8 }}
+          >
+            <option value="card">Credit / debit card</option>
+            <option value="paypal">PayPal</option>
+            <option value="cash">Pay at venue</option>
+          </select>
         </div>
         <button
           className="btn btn-primary"
