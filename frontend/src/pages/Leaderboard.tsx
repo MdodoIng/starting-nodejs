@@ -31,45 +31,79 @@ export default function Leaderboard() {
     fetchLeaderboard(gameName)
   }, [gameName])
 
+  const getMedalEmoji = (rank: number) => {
+    if (rank === 1) return '🥇'
+    if (rank === 2) return '🥈'
+    if (rank === 3) return '🥉'
+    return `#${rank}`
+  }
+
   return (
-    <div className="card">
-      <h2>Leaderboard</h2>
+    <div className="card" style={{ maxWidth: '800px' }}>
+      <h2>🏆 Leaderboard</h2>
+      
       <div>
-        <label>
-          Game:
-          <select value={gameName} onChange={(e) => setGameName(e.target.value)}>
-            <option value="snake">Snake</option>
-            <option value="flappy-bird">Flappy Bird</option>
-            <option value="tetris">Tetris</option>
-          </select>
-        </label>
+        <label htmlFor="game-select">Select Game</label>
+        <select
+          id="game-select"
+          value={gameName}
+          onChange={(e) => setGameName(e.target.value)}
+          style={{ marginBottom: '24px' }}
+        >
+          <option value="snake">🐍 Snake</option>
+          <option value="flappy-bird">🐦 Flappy Bird</option>
+          <option value="tetris">🎮 Tetris</option>
+        </select>
       </div>
 
       {error && <p className="error">{error}</p>}
 
       {loading ? (
-        <p>Loading...</p>
+        <div style={{ textAlign: 'center', padding: '40px' }}>
+          <div
+            style={{
+              fontSize: '24px',
+              marginBottom: '16px',
+            }}
+          >
+            Loading scores
+            <span className="loading"></span>
+          </div>
+        </div>
       ) : leaderboard.length > 0 ? (
         <table>
           <thead>
             <tr>
-              <th>Rank</th>
+              <th style={{ width: '60px' }}>Rank</th>
               <th>Player</th>
-              <th>Score</th>
+              <th style={{ width: '120px', textAlign: 'right' }}>Score</th>
             </tr>
           </thead>
           <tbody>
-            {leaderboard.map((entry) => (
-              <tr key={entry.userId}>
-                <td>{entry.rank}</td>
+            {leaderboard.map((entry, index) => (
+              <tr
+                key={entry.userId}
+                style={{
+                  backgroundColor:
+                    index < 3 ? 'rgba(107, 114, 128, 0.05)' : 'transparent',
+                }}
+              >
+                <td style={{ fontSize: '20px', fontWeight: 'bold' }}>
+                  {getMedalEmoji(entry.rank)}
+                </td>
                 <td>{entry.username}</td>
-                <td>{entry.score}</td>
+                <td style={{ textAlign: 'right', fontWeight: '600' }}>
+                  {entry.score.toLocaleString()}
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       ) : (
-        <p>No scores yet for this game</p>
+        <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>📭</div>
+          <p>No scores yet for this game</p>
+        </div>
       )}
     </div>
   )
