@@ -1,0 +1,56 @@
+---
+import "../styles/global.css";
+
+interface Props {
+  title: string;
+  active?: string;
+}
+
+const { title, active = "" } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title} · Leaderboard</title>
+  </head>
+  <body>
+    <nav class="topnav">
+      <div class="brand">🏆 Leaderboard</div>
+      <div>
+        <a href="/" class={active === "home" ? "active" : ""}>Leaderboard</a>
+        <a href="/submit" class={active === "submit" ? "active" : ""}
+          >Submit Score</a
+        >
+        <a href="/profile" class={active === "profile" ? "active" : ""}
+          >My Profile</a
+        >
+        <a
+          href="/login"
+          id="nav-auth-link"
+          class={active === "login" ? "active" : ""}>Log In</a
+        >
+      </div>
+    </nav>
+    <main class="container">
+      <slot />
+    </main>
+
+    <script>
+      import { isLoggedIn, clearSession } from "../scripts/api.js";
+
+      const authLink = document.getElementById("nav-auth-link");
+      if (authLink && isLoggedIn()) {
+        authLink.textContent = "Log Out";
+        authLink.setAttribute("href", "#");
+        authLink.addEventListener("click", (e) => {
+          e.preventDefault();
+          clearSession();
+          window.location.href = "/login";
+        });
+      }
+    </script>
+  </body>
+</html>

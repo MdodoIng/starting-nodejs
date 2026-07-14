@@ -1,0 +1,108 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+<Layout title="My Profile" active="profile">
+  <div id="auth-warning" class="panel" style="display:none;">
+    You need to <a class="link" href="/login">log in</a> to view your profile.
+  </div>
+
+  <div id="profile-content" style="display:none;">
+    <div class="panel">
+      <h1 id="username-heading">My Profile</h1>
+      <div class="row" style="margin-top: 10px;">
+        <div>
+          <div class="muted">Global Rank</div>
+          <h2 id="global-rank">—</h2>
+        </div>
+        <div>
+          <div class="muted">Global Score</div>
+          <h2 id="global-score">—</h2>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Around Me</h2>
+      <p class="subtitle">Players ranked just above and below you, globally.</p>
+      <table>
+        <thead><tr><th>Rank</th><th>Player</th><th style="text-align:right;">Score</th></tr></thead>
+        <tbody id="around-body">
+          <tr><td colspan="3" class="muted">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="panel">
+      <h2>Recent Score History</h2>
+      <table>
+        <thead><tr><th>Game</th><th>Mode</th><th style="text-align:right;">Score</th><th>When</th></tr></thead>
+        <tbody id="history-body">
+          <tr><td colspan="4" class="muted">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    import { apiFetch, getStoredUser, isLoggedIn } from '../scripts/api.js';
+
+    if (!isLoggedIn()) {
+      document.getElementById('auth-warning').style.display = 'block';
+    } else {
+      document.getElementById('profile-content').style.display = 'block';
+      init();
+    }
+
+    async function init() {
+      const me = getStoredUser();
+      document.getElementById('username-heading').textContent = `Hi, ${me.username}`;
+
+      try {
+        const rankData = await apiFetch(`/api/leaderboard/rank/${me.id}?scope=global&period=alltime`);
+        document.getElementById('global-rank').textContent = `#${rankData.rank}`;
+        document.getElementById('global-score').textContent = rankData.score.toLocaleString();
+      } catch (err) {
+        document.getElementById('global-rank').textContent = '—';
+        document.getElementById('global-score').textContent = '0';
+      }
+
+      try {
+        const around = await apiFetch(`/api/leaderboard/around/${me.id}?window=3`);
+        const tbody = document.getElementById('around-body');
+        tbody.innerHTML = around.leaderboard
+          .map((r) => {
+            const isMe = String(r.userId) === String(me.id);
+            return `<tr class="${isMe ? 'me' : ''}">
+              <td class="rank">#${r.rank}</td>
+              <td>${r.username}${isMe ? '<span class="badge">you</span>' : ''}</td>
+              <td class="score">${r.score.toLocaleString()}</td>
+            </tr>`;
+          })
+          .join('');
+      } catch (err) {
+        document.getElementById('around-body').innerHTML =
+          `<tr><td colspan="3" class="muted">Submit a score to see your neighbors on the leaderboard.</td></tr>`;
+      }
+
+      try {
+        const history = await apiFetch('/api/scores/history?limit=15');
+        const tbody = document.getElementById('history-body');
+        if (!history.history.length) {
+          tbody.innerHTML = `<tr><td colspan="4" class="muted">No scores submitted yet.</td></tr>`;
+        } else {
+          tbody.innerHTML = history.history
+            .map((h) => `<tr>
+              <td>${h.gameId}</td>
+              <td class="muted">${h.mode}</td>
+              <td class="score">${h.score.toLocaleString()}</td>
+              <td class="muted">${new Date(h.timestamp).toLocaleString()}</td>
+            </tr>`)
+            .join('');
+        }
+      } catch (err) {
+        document.getElementById('history-body').innerHTML =
+          `<tr><td colspan="4" class="msg error">${err.message}</td></tr>`;
+      }
+    }
+  </script>
+</Layout>

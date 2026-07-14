@@ -1,0 +1,147 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="Leaderboard" active="home">
+  <div class="panel">
+    <div class="row">
+      <div>
+        <h1>Global Leaderboard</h1>
+        <p class="subtitle">Live rankings, updated in real time.</p>
+      </div>
+      <div class="spacer"></div>
+      <div class="row" id="live-indicator" style="display:none;">
+        <span class="live-dot"></span>
+        <span class="muted">live</span>
+      </div>
+    </div>
+
+    <div class="tabs" id="period-tabs">
+      <button class="tab-btn active" data-period="alltime">All-Time</button>
+      <button class="tab-btn" data-period="daily">Today</button>
+      <button class="tab-btn" data-period="weekly">This Week</button>
+      <button class="tab-btn" data-period="monthly">This Month</button>
+    </div>
+
+    <div class="row" style="margin-bottom: 14px;">
+      <label for="game-select" class="muted">Scope:</label>
+      <select id="game-select">
+        <option value="">Global (all games)</option>
+      </select>
+    </div>
+
+    <div id="leaderboard-msg"></div>
+
+    <table>
+      <thead>
+        <tr
+          ><th>Rank</th><th>Player</th><th style="text-align:right;">Score</th
+          ></tr
+        >
+      </thead>
+      <tbody id="leaderboard-body">
+        <tr><td colspan="3" class="muted">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div></Layout
+>
+<script>
+  import { apiFetch, getStoredUser, API_URL } from "../scripts/api.js";
+  import { io } from "socket.io-client";
+
+  let currentPeriod = "alltime";
+  let currentGame = "";
+  const me = getStoredUser();
+
+  const tbody = document.getElementById("leaderboard-body");
+  const msgEl = document.getElementById("leaderboard-msg");
+  const gameSelect = document.getElementById("game-select");
+  const liveIndicator = document.getElementById("live-indicator");
+
+  function renderRows(rows) {
+    if (!rows.length) {
+      tbody.innerHTML =
+        '<tr><td colspan="3" class="muted">No scores yet — be the first to submit one!</td></tr>';
+      return;
+    }
+    tbody.innerHTML = rows
+      .map((r) => {
+        const isMe = me && String(r.userId) === String(me.id);
+        return `<tr class="${isMe ? "me" : ""}">
+            <td class="rank">#${r.rank}</td>
+            <td>${r.username}${isMe ? '<span class="badge">you</span>' : ""}</td>
+            <td class="score">${r.score.toLocaleString()}</td>
+          </tr>`;
+      })
+      .join("");
+  }
+
+  async function loadLeaderboard() {
+    msgEl.innerHTML = "";
+    try {
+      const scope = currentGame ? "game" : "global";
+      const qs = new URLSearchParams({
+        scope,
+        period: currentPeriod,
+        limit: "20",
+      });
+      if (currentGame) qs.set("gameId", currentGame);
+      const data = await apiFetch(`/api/leaderboard?${qs.toString()}`);
+      renderRows(data.leaderboard);
+    } catch (err) {
+      msgEl.innerHTML = `<div class="msg error">${err.message}</div>`;
+    }
+  }
+
+  async function loadGames() {
+    try {
+      const data = await apiFetch("/api/leaderboard/games");
+      data.games.forEach((g) => {
+        const opt = document.createElement("option");
+        opt.value = g;
+        opt.textContent = g;
+        gameSelect.appendChild(opt);
+      });
+    } catch (err) {
+      // non-fatal, global view still works
+      console.warn("Could not load games list:", err.message);
+    }
+  }
+
+  document.getElementById("period-tabs").addEventListener("click", (e) => {
+    const btn = e.target.closest(".tab-btn");
+    if (!btn) return;
+    document
+      .querySelectorAll("#period-tabs .tab-btn")
+      .forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    currentPeriod = btn.dataset.period;
+    loadLeaderboard();
+  });
+
+  gameSelect.addEventListener("change", () => {
+    currentGame = gameSelect.value;
+    loadLeaderboard();
+  });
+
+  loadGames();
+  loadLeaderboard();
+
+  // --- Real-time updates via Socket.IO ---
+  try {
+    const socket = io(API_URL);
+    socket.on("connect", () => {
+      liveIndicator.style.display = "flex";
+      socket.emit("subscribe:global");
+    });
+    socket.on("disconnect", () => {
+      liveIndicator.style.display = "none";
+    });
+    socket.on("leaderboard:update", () => {
+      // Any score change refreshes the currently viewed leaderboard.
+      loadLeaderboard();
+    });
+  } catch (err) {
+    console.warn("Real-time updates unavailable:", err.message);
+  }
+</script>

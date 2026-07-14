@@ -1,0 +1,86 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+<Layout title="Submit Score" active="submit">
+  <div class="panel" style="max-width: 480px; margin: 0 auto;">
+    <h1>Submit a Score</h1>
+    <p class="subtitle">Log a result for any game or activity.</p>
+
+    <div id="auth-warning" class="msg error" style="display:none;">
+      You need to <a class="link" href="/login">log in</a> first.
+    </div>
+
+    <form id="score-form">
+      <div>
+        <label for="gameId">Game / Activity ID</label>
+        <input id="gameId" name="gameId" type="text" placeholder="e.g. space-invaders" required />
+      </div>
+      <div>
+        <label for="score">Score</label>
+        <input id="score" name="score" type="number" step="any" required />
+      </div>
+      <div>
+        <label for="mode">Mode</label>
+        <select id="mode" name="mode">
+          <option value="add">Add to total (cumulative points)</option>
+          <option value="set">Only keep if it's a new high score</option>
+        </select>
+      </div>
+      <div id="form-msg"></div>
+      <button class="primary" type="submit">Submit Score</button>
+    </form>
+
+    <div id="result-panel" style="display:none; margin-top: 18px;">
+      <h2>Updated Standing</h2>
+      <table>
+        <tbody id="result-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    import { apiFetch, isLoggedIn } from '../scripts/api.js';
+
+    const form = document.getElementById('score-form');
+    const msgEl = document.getElementById('form-msg');
+    const authWarning = document.getElementById('auth-warning');
+    const resultPanel = document.getElementById('result-panel');
+    const resultBody = document.getElementById('result-body');
+
+    if (!isLoggedIn()) {
+      authWarning.style.display = 'block';
+      form.querySelector('button').disabled = true;
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      msgEl.innerHTML = '';
+      const submitBtn = form.querySelector('button');
+      submitBtn.disabled = true;
+
+      const formData = new FormData(form);
+      try {
+        const data = await apiFetch('/api/scores', {
+          method: 'POST',
+          body: JSON.stringify({
+            gameId: formData.get('gameId'),
+            score: Number(formData.get('score')),
+            mode: formData.get('mode'),
+          }),
+        });
+
+        msgEl.innerHTML = `<div class="msg success">Score submitted!</div>`;
+        resultPanel.style.display = 'block';
+        resultBody.innerHTML = `
+          <tr><td>Global Rank</td><td class="score">#${data.global.rank} (${data.global.score.toLocaleString()} pts)</td></tr>
+          <tr><td>Rank in "${data.gameId}"</td><td class="score">#${data.game.rank} (${data.game.score.toLocaleString()} pts)</td></tr>
+        `;
+        form.reset();
+      } catch (err) {
+        msgEl.innerHTML = `<div class="msg error">${err.message}</div>`;
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+  </script>
+</Layout>
