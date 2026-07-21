@@ -1,0 +1,61 @@
+version: '3.9'
+services:
+  api-gateway:
+    build: ./api-gateway
+    ports: ["8080:80"]
+    depends_on: [user-service, product-service, cart-service, order-service]
+
+  user-service:
+    build: ./user-service
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@user-db:5432/users
+      JWT_SECRET: ${JWT_SECRET}
+    depends_on: [user-db]
+
+  user-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: users
+      POSTGRES_PASSWORD: postgres
+
+  product-service:
+    build: ./product-service
+    environment:
+      MONGO_URL: mongodb://product-db:27017/products
+    depends_on: [product-db]
+
+  product-db:
+    image: mongo:7
+
+  cart-service:
+    build: ./cart-service
+    environment:
+      REDIS_URL: redis://cart-cache:6379
+    depends_on: [cart-cache]
+
+  cart-cache:
+    image: redis:7-alpine
+
+  order-service:
+    build: ./order-service
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@order-db:5432/orders
+      PAYMENT_SERVICE_URL: http://payment-service:3005
+      NOTIFICATION_SERVICE_URL: http://notification-service:3006
+    depends_on: [order-db, payment-service, notification-service]
+
+  order-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: orders
+      POSTGRES_PASSWORD: postgres
+
+  payment-service:
+    build: ./payment-service
+    environment:
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+
+  notification-service:
+    build: ./notification-service
+    environment:
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY}
