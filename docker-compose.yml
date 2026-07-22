@@ -1,0 +1,98 @@
+networks:
+  ecommerce-net:
+    driver: bridge
+
+services:
+  api-gateway:
+    image: traefik:v3.1
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "8080:80"
+      - "8081:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - ecommerce-net
+
+  user-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${USER_DB_NAME}
+      POSTGRES_USER: ${USER_DB_USER}
+      POSTGRES_PASSWORD: ${USER_DB_PASSWORD}
+    volumes:
+      - user-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${USER_DB_USER} -d ${USER_DB_NAME}" ]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+    networks:
+      - ecommerce-net
+
+  user-service:
+    build: ./services/user-service
+    environment:
+      DB_HOST: user-db
+      DB_PORT: 5432
+      DB_USER: ${USER_DB_USER}
+      DB_PASSWORD: ${USER_DB_PASSWORD}
+      DB_NAME: ${USER_DB_NAME}
+      JWT_SECRET: ${JWT_SECRET}
+      PORT: 4000
+    depends_on:
+      user-db:
+        condition: service_healthy
+    networks:
+      - ecommerce-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.user-service.rule=PathPrefix(`/api/users`)"
+      - "traefik.http.services.user-service.loadbalancer.server.port=4000"
+      - "traefik.http.middlewares.user-strip.stripprefix.prefixes=/api/users"
+      - "traefik.http.routers.user-service.middlewares=user-strip"
+
+  product-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${PRODUCT_DB_NAME}
+      POSTGRES_USER: ${PRODUCT_DB_USER}
+      POSTGRES_PASSWORD: ${PRODUCT_DB_PASSWORD}
+    volumes:
+      - product-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${PRODUCT_DB_USER} -d ${PRODUCT_DB_NAME}" ]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+    networks:
+      - ecommerce-net
+
+  product-service:
+    build: ./services/product-service
+    environment:
+      DB_HOST: product-db
+      DB_PORT: 5432
+      DB_USER: ${PRODUCT_DB_USER}
+      DB_PASSWORD: ${PRODUCT_DB_PASSWORD}
+      DB_NAME: ${PRODUCT_DB_NAME}
+      PORT: 5000
+    depends_on:
+      product-db:
+        condition: service_healthy
+    networks:
+      - ecommerce-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.product-service.rule=PathPrefix(`/api/products`)"
+      - "traefik.http.services.product-service.loadbalancer.server.port=5000"
+      - "traefik.http.middlewares.product-strip.stripprefix.prefixes=/api/products"
+      - "traefik.http.routers.product-service.middlewares=product-strip"
+
+volumes:
+  user-db-data:
+  product-db-data:
