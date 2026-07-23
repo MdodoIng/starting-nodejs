@@ -21,10 +21,10 @@ func main() {
 		json.NewEncoder(w).Encode(map[string]string{"status": "ok", "service": "product-service"})
 	})
 
-	r.Post("/products", handlers.CreateProduct)
-	r.Get("/products", handlers.ListProducts)
-	r.Get("/products/{id}", handlers.GetProduct)
-	r.Patch("/products/{id}/stock", handlers.UpdateStock)
+	r.Post("/", handlers.CreateProduct)
+	r.Get("/", handlers.ListProducts)
+	r.Get("/{id}", handlers.GetProduct)
+	r.Patch("/{id}/stock", handlers.UpdateStock)
 
 	port := os.Getenv("PORT")
 	if port == "" {
