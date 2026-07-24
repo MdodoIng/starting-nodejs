@@ -1,0 +1,55 @@
+name: Product Service CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "services/product-service/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - "services/product-service/**"
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/product-service
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+
+      - run: go mod download
+      - run: go build -o product-service .
+      - run: go vet ./...
+
+      - name: Build Docker image
+        run: docker build -t product-service:${{ github.sha }} .
+
+  publish:
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: services/product-service
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/product-service:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/product-service:${{ github.sha }}
